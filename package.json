@@ -1,0 +1,23 @@
+{
+  "name": "maison-virtual-tryon",
+  "version": "1.0.0",
+  "description": "MAISON — Luxury Fashion E-Commerce Store with AI Virtual Try-On",
+  "private": true,
+  "scripts": {
+    "postinstall": "npm install --prefix server && npm install --prefix client",
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "node server/index.js",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "dev": "npm run dev --prefix server"
+  },
+  "keywords": [
+    "virtual-tryon",
+    "fashion-ecommerce",
+    "gemini-api",
+    "haute-couture"
+  ],
+  "author": "MAISON Atelier",
+  "license": "ISC"
+}
