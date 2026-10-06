@@ -47,9 +47,11 @@ app.get('/api/health', (req, res) => {
 });
 
 const tryOnRoutes = require('./src/routes/tryOnRoutes');
+const paymentRoutes = require('./src/routes/paymentRoutes');
 
 // Mount Routers
 app.use('/api', tryOnRoutes);
+app.use('/api/payment', paymentRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/wardrobe', wardrobeRoutes);
 app.use('/api/color-analysis', colorRoutes);

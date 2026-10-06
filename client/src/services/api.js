@@ -97,4 +97,11 @@ export const subscriptionAPI = {
   upgradePlan: (plan) => api.post('/subscription/upgrade', { plan }),
 };
 
+// Payment Services
+export const paymentAPI = {
+  checkout: (data) => api.post('/payment/checkout', data),
+  subscribe: (data) => api.post('/payment/subscribe', data),
+  getOrders: () => api.get('/payment/orders'),
+};
+
 export default api;

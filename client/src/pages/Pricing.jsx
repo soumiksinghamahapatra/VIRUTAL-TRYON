@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { subscriptionAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, Check, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Sparkles, Check, ArrowRight, ShieldCheck, Lock } from 'lucide-react';
+import PaymentModal from '../components/PaymentModal';
 
 const Pricing = () => {
   const { user, updateUser, isAuthenticated } = useAuth();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [upgradingPlan, setUpgradingPlan] = useState(null);
+  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState(null);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -24,23 +26,22 @@ const Pricing = () => {
     fetchPlans();
   }, []);
 
-  const handleUpgrade = async (planId) => {
+  const handleSelectPlan = (plan) => {
     if (!isAuthenticated) {
       alert('Please sign in or create an account first to select a plan.');
       return;
     }
 
-    setUpgradingPlan(planId);
-    try {
-      const res = await subscriptionAPI.upgradePlan(planId);
-      updateUser({ plan: planId });
-      alert(res.data.message);
-    } catch (err) {
-      console.error('Upgrade failed:', err);
-      alert('Upgrade error. Please try again.');
-    } finally {
-      setUpgradingPlan(null);
+    if (plan.price === 0) {
+      subscriptionAPI.upgradePlan(plan.id).then(() => {
+        updateUser({ plan: plan.id });
+        alert('Enrolled in Free Starter plan.');
+      });
+      return;
     }
+
+    setSelectedPlanForPayment(plan);
+    setIsPaymentOpen(true);
   };
 
   return (
@@ -145,8 +146,8 @@ const Pricing = () => {
                 {/* Call to action button */}
                 <div className="pt-8 mt-6 border-t border-current/10">
                   <button
-                    onClick={() => handleUpgrade(plan.id)}
-                    disabled={isCurrent || upgradingPlan === plan.id}
+                    onClick={() => handleSelectPlan(plan)}
+                    disabled={isCurrent}
                     className={`w-full py-3 rounded-full font-semibold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
                       isCurrent
                         ? 'opacity-50 cursor-default bg-gray-200 text-gray-700'
@@ -155,12 +156,11 @@ const Pricing = () => {
                         : 'bg-[#000000] text-[#FFFFFF] hover:bg-[#171717]'
                     }`}
                   >
-                    {upgradingPlan === plan.id ? (
-                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : isCurrent ? (
+                    {isCurrent ? (
                       'Current Active Plan'
                     ) : (
                       <>
+                        <Lock className="w-3.5 h-3.5" />
                         <span>Select {plan.name}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </>
@@ -183,6 +183,27 @@ const Pricing = () => {
           Cancel anytime with 1 click in your account settings. All active color profiles and wardrobe catalogs remain preserved forever.
         </p>
       </div>
+
+      {/* Secure Subscription Payment Modal */}
+      {selectedPlanForPayment && (
+        <PaymentModal
+          isOpen={isPaymentOpen}
+          onClose={() => {
+            setIsPaymentOpen(false);
+            setSelectedPlanForPayment(null);
+          }}
+          orderData={{
+            type: 'subscription',
+            planId: selectedPlanForPayment.id,
+            planName: selectedPlanForPayment.name,
+            totalAmount: selectedPlanForPayment.price,
+            currency: 'USD'
+          }}
+          onPaymentSuccess={() => {
+            updateUser({ plan: selectedPlanForPayment.id });
+          }}
+        />
+      )}
     </div>
   );
 };

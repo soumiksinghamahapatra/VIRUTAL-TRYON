@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
+import { Sparkles, ArrowRight, AlertCircle, Eye, EyeOff, ShieldCheck, Check } from 'lucide-react';
 
 const AESTHETICS_LIST = [
   'Quiet Luxury',
   'Minimalist',
   'Casual Chic',
   'French Elegant',
-  'Streetwear',
   'Tailored Workwear',
+  'Haute Couture'
 ];
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedAesthetics, setSelectedAesthetics] = useState(['Quiet Luxury', 'Casual Chic']);
+  const [showPassword, setShowPassword] = useState(false);
+  const [selectedAesthetics, setSelectedAesthetics] = useState(['Quiet Luxury', 'Minimalist']);
   const [bodyType, setBodyType] = useState('Hourglass');
+  const [agreeTerms, setAgreeTerms] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -32,9 +34,22 @@ const Register = () => {
     }
   };
 
+  const isPasswordStrong = password.length >= 6;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!agreeTerms) {
+      setError('Please accept the MAISON Atelier terms to create an account.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -47,129 +62,179 @@ const Register = () => {
       });
       navigate('/color-analysis');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create account');
+      setError(err.response?.data?.message || 'Failed to establish account. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="max-w-lg w-full bg-white rounded-3xl p-8 sm:p-10 border border-[#E5E5E5] shadow-sm space-y-6">
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-16 bg-white text-black">
+      <div className="max-w-lg w-full bg-white border border-neutral-300 p-8 sm:p-12 shadow-xl space-y-8">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="w-10 h-10 rounded-full bg-[#000000] text-[#D4D4D4] flex items-center justify-center mx-auto mb-3 shadow-sm">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <h2 className="font-serif text-3xl font-bold text-[#000000]">
-            Begin Your Style Journey
-          </h2>
-          <p className="text-xs sm:text-sm text-[#525252]">
-            Create an MAISON account for personalized color matching and wardrobe curation.
+        <div className="text-center space-y-3">
+          <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-neutral-400">
+            Client Enrollment
+          </span>
+          <h1 className="font-serif text-4xl font-light text-black">
+            Join MAISON Atelier
+          </h1>
+          <p className="text-xs text-neutral-500 font-light leading-relaxed">
+            Create your profile to unlock custom 12-season color formulas, digital closet archives, and virtual fitting room privileges.
           </p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="p-4 border border-red-300 bg-red-50 text-red-800 text-xs flex items-center gap-2.5 animate-fadeIn">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
             <span>{error}</span>
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#000000] mb-1.5">
-              Full Name
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Clara Dupont"
-              className="w-full px-4 py-2.5 rounded-xl border border-[#D4D4D4] focus:border-[#000000] focus:outline-none text-sm text-[#000000] bg-[#FFFFFF]"
-            />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700 mb-1.5">
+                Full Name
+              </label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Eleanor Vance"
+                className="w-full text-xs border border-neutral-300 p-3 text-black bg-white focus:border-black outline-none transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700 mb-1.5">
+                Email Address
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="eleanor@domain.com"
+                className="w-full text-xs border border-neutral-300 p-3 text-black bg-white focus:border-black outline-none transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700 mb-1.5">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 6 characters"
+                  className="w-full text-xs border border-neutral-300 p-3 pr-10 text-black bg-white focus:border-black outline-none tracking-wider transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-neutral-400 hover:text-black transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {password && (
+                <p className={`text-[10px] mt-1.5 flex items-center gap-1 ${isPasswordStrong ? 'text-green-700' : 'text-neutral-400'}`}>
+                  {isPasswordStrong ? <Check className="w-3 h-3" /> : '•'} Minimum 6 characters met
+                </p>
+              )}
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#000000] mb-1.5">
-              Email Address
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="clara@example.com"
-              className="w-full px-4 py-2.5 rounded-xl border border-[#D4D4D4] focus:border-[#000000] focus:outline-none text-sm text-[#000000] bg-[#FFFFFF]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#000000] mb-1.5">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimum 6 characters"
-              className="w-full px-4 py-2.5 rounded-xl border border-[#D4D4D4] focus:border-[#000000] focus:outline-none text-sm text-[#000000] bg-[#FFFFFF]"
-            />
-          </div>
-
-          {/* Aesthetics Picker */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#000000] mb-2">
-              Style Aesthetics (Select Preferred)
+          {/* Aesthetic Preferences */}
+          <div className="border-t border-neutral-200 pt-4 space-y-3">
+            <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700">
+              Style Archetypes (Select all that apply)
             </label>
             <div className="flex flex-wrap gap-2">
-              {AESTHETICS_LIST.map((item) => {
-                const isSelected = selectedAesthetics.includes(item);
+              {AESTHETICS_LIST.map((aes) => {
+                const selected = selectedAesthetics.includes(aes);
                 return (
                   <button
-                    key={item}
+                    key={aes}
                     type="button"
-                    onClick={() => toggleAesthetic(item)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                      isSelected
-                        ? 'bg-[#000000] text-[#FFFFFF] border-[#000000]'
-                        : 'bg-[#FAFAFA] text-[#525252] border-[#D4D4D4] hover:border-[#000000]'
+                    onClick={() => toggleAesthetic(aes)}
+                    className={`px-3 py-1.5 text-xs transition-all ${
+                      selected
+                        ? 'bg-black text-white'
+                        : 'border border-neutral-300 text-neutral-600 hover:border-black hover:text-black bg-white'
                     }`}
                   >
-                    {item}
+                    {aes}
                   </button>
                 );
               })}
             </div>
           </div>
 
+          {/* Body Silhouette */}
+          <div className="space-y-1.5">
+            <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700">
+              Silhouette Proportion
+            </label>
+            <select
+              value={bodyType}
+              onChange={(e) => setBodyType(e.target.value)}
+              className="w-full text-xs border border-neutral-300 p-2.5 bg-white text-black focus:border-black outline-none"
+            >
+              <option value="Hourglass">Hourglass Proportion</option>
+              <option value="Rectangle">Rectangle / Column</option>
+              <option value="Pear">Inverted Triangle / Athletic</option>
+              <option value="Petite">Petite & Tailored</option>
+              <option value="Curvy">Curvy / Plus</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              type="checkbox"
+              id="terms"
+              checked={agreeTerms}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
+              className="accent-black w-3.5 h-3.5"
+            />
+            <label htmlFor="terms" className="text-[11px] text-neutral-500 cursor-pointer">
+              I agree to the MAISON Private Client Terms & AI Styling Protocols.
+            </label>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-full bg-[#000000] text-[#FFFFFF] font-semibold text-sm hover:bg-[#171717] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 mt-2"
+            className="w-full py-4 bg-black text-white hover:bg-neutral-800 disabled:opacity-50 text-xs uppercase tracking-[0.25em] font-semibold transition-all flex items-center justify-center gap-2 shadow-sm"
           >
             {loading ? (
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Establishing Profile...</span>
+              </>
             ) : (
               <>
-                <span>Create My Account</span>
-                <ArrowRight className="w-4 h-4" />
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Create Atelier Account</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}
           </button>
         </form>
 
-        {/* Footer link */}
-        <div className="text-center pt-2">
-          <p className="text-xs text-[#525252]">
+        {/* Footer */}
+        <div className="text-center pt-2 border-t border-neutral-100">
+          <p className="text-xs text-neutral-500 font-light">
             Already have an account?{' '}
-            <Link to="/login" className="font-bold text-[#000000] hover:underline">
-              Sign in
+            <Link to="/login" className="font-semibold text-black hover:underline uppercase tracking-wider text-[11px]">
+              Sign In &rarr;
             </Link>
           </p>
         </div>

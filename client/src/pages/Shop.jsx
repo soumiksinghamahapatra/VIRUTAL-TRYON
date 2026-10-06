@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, ArrowRight, Filter, Eye, ShoppingBag } from 'lucide-react';
+import { Sparkles, ArrowRight, Filter, Eye, ShoppingBag, Check } from 'lucide-react';
+import PaymentModal from '../components/PaymentModal';
 
 const PRODUCTS = [
   {
@@ -69,7 +70,14 @@ const CATEGORIES = ['All', 'Outerwear', 'Dresses', 'Tops', 'Bottoms'];
 
 const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [checkoutProduct, setCheckoutProduct] = useState(null);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const navigate = useNavigate();
+
+  const handleAcquire = (product) => {
+    setCheckoutProduct(product);
+    setIsPaymentOpen(true);
+  };
 
   const filtered = selectedCategory === 'All'
     ? PRODUCTS
@@ -160,8 +168,8 @@ const Shop = () => {
                   <Sparkles className="w-3.5 h-3.5" /> Try On Now
                 </Link>
                 <button
-                  onClick={() => alert(`Added ${product.name} to bag.`)}
-                  className="text-xs text-neutral-400 hover:text-black flex items-center gap-1"
+                  onClick={() => handleAcquire(product)}
+                  className="text-xs font-semibold uppercase tracking-wider bg-black text-white px-3 py-1.5 hover:bg-neutral-800 transition-colors flex items-center gap-1 shadow-sm"
                 >
                   <ShoppingBag className="w-3.5 h-3.5" /> Acquire
                 </button>
@@ -170,6 +178,34 @@ const Shop = () => {
           ))}
         </div>
       </div>
+
+      {/* Secure Payment Modal */}
+      {checkoutProduct && (
+        <PaymentModal
+          isOpen={isPaymentOpen}
+          onClose={() => {
+            setIsPaymentOpen(false);
+            setCheckoutProduct(null);
+          }}
+          orderData={{
+            type: 'garment',
+            totalAmount: checkoutProduct.price,
+            currency: 'USD',
+            items: [
+              {
+                id: checkoutProduct.id,
+                name: checkoutProduct.name,
+                price: checkoutProduct.price,
+                quantity: 1,
+                image: checkoutProduct.image
+              }
+            ]
+          }}
+          onPaymentSuccess={(order) => {
+            console.log('Order finalized:', order);
+          }}
+        />
+      )}
     </div>
   );
 };
