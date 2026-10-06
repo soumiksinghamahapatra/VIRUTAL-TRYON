@@ -1,26 +1,36 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, ArrowRight, AlertCircle, Eye, EyeOff, Lock, ShieldCheck } from 'lucide-react';
+import { Lock, Eye, EyeOff, Sparkles, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
 
+/**
+ * Login Page Component
+ * Handles client authentication, password visibility toggling, and fast demo access.
+ */
 const Login = () => {
+  // --- Form State ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+
+  // --- UI State ---
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // --- Navigation & Auth ---
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/wardrobe';
+  const redirectPath = location.state?.from?.pathname || '/wardrobe';
 
+  // --- Submit Handler ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!email || !password) {
+    // Basic Validation
+    if (!email.trim() || !password) {
       setError('Please provide both your email address and password.');
       return;
     }
@@ -28,26 +38,29 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(email, password);
-      navigate(from, { replace: true });
+      await login(email.trim(), password);
+      navigate(redirectPath, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid email or password. Please try again.');
+      const message = err.response?.data?.message || 'Invalid email or password. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFillDemo = (demoEmail, demoPass) => {
+  // --- Demo Account Helper ---
+  const fillDemoAccount = (demoEmail, demoPassword) => {
     setEmail(demoEmail);
-    setPassword(demoPass);
+    setPassword(demoPassword);
     setError('');
   };
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-16 bg-white text-black">
-      <div className="max-w-md w-full bg-white border border-neutral-300 p-8 sm:p-12 shadow-xl space-y-8 relative">
-        {/* Header */}
-        <div className="text-center space-y-3">
+      <div className="max-w-md w-full bg-white border border-neutral-300 p-8 sm:p-12 shadow-xl space-y-8">
+        
+        {/* 1. Header Section */}
+        <div className="text-center space-y-2">
           <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-neutral-400">
             Private Access
           </span>
@@ -55,26 +68,26 @@ const Login = () => {
             Sign In to Atelier
           </h1>
           <p className="text-xs text-neutral-500 font-light leading-relaxed">
-            Access your personalized styling consultations, virtual fitting room, and curated digital wardrobe.
+            Enter your credentials to access your styling studio and digital wardrobe.
           </p>
         </div>
 
-        {/* Demo One-Click Access Buttons */}
-        <div className="space-y-2 border border-neutral-200 p-3.5 bg-neutral-50/70">
+        {/* 2. Fast Demo Logins */}
+        <div className="border border-neutral-200 p-3.5 bg-neutral-50/70 space-y-2">
           <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-500 flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3 text-black" /> Instant Demo Credentials:
+            <Sparkles className="w-3 h-3 text-black" /> Quick Demo Accounts:
           </p>
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => handleFillDemo('demo@maison.com', 'Password123!')}
+              onClick={() => fillDemoAccount('demo@maison.com', 'Password123!')}
               className="px-2.5 py-1.5 text-[11px] font-medium border border-neutral-300 bg-white hover:border-black text-black transition-colors text-left truncate"
             >
               VIP: demo@maison.com
             </button>
             <button
               type="button"
-              onClick={() => handleFillDemo('stylist@maison.com', 'Password123!')}
+              onClick={() => fillDemoAccount('stylist@maison.com', 'Password123!')}
               className="px-2.5 py-1.5 text-[11px] font-medium border border-neutral-300 bg-white hover:border-black text-black transition-colors text-left truncate"
             >
               Stylist: stylist@maison.com
@@ -82,7 +95,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Error Alert */}
+        {/* 3. Error Alert (if present) */}
         {error && (
           <div className="p-4 border border-red-300 bg-red-50 text-red-800 text-xs flex items-center gap-2.5 animate-fadeIn">
             <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
@@ -90,8 +103,10 @@ const Login = () => {
           </div>
         )}
 
-        {/* Form */}
+        {/* 4. Login Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
+          
+          {/* Email Field */}
           <div>
             <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700 mb-1.5">
               Email Address
@@ -106,6 +121,7 @@ const Login = () => {
             />
           </div>
 
+          {/* Password Field with Show/Hide Toggle */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700">
@@ -113,12 +129,13 @@ const Login = () => {
               </label>
               <button
                 type="button"
-                onClick={() => alert('Password recovery link dispatched to your registered address.')}
+                onClick={() => alert('Password reset instructions dispatched to your email address.')}
                 className="text-[10px] text-neutral-400 hover:text-black uppercase tracking-wider underline"
               >
-                Forgot?
+                Forgot Password?
               </button>
             </div>
+            
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -132,13 +149,15 @@ const Login = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-3 text-neutral-400 hover:text-black transition-colors"
+                title={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-1 text-xs text-neutral-600">
+          {/* Remember Me & Security Badge */}
+          <div className="flex items-center justify-between text-xs text-neutral-600 pt-1">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -149,10 +168,11 @@ const Login = () => {
               <span className="text-[11px]">Remember on this device</span>
             </label>
             <span className="flex items-center gap-1 text-[11px] text-neutral-400">
-              <ShieldCheck className="w-3.5 h-3.5 text-black" /> SSL 256-Bit
+              <ShieldCheck className="w-3.5 h-3.5 text-black" /> 256-Bit SSL
             </span>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -173,7 +193,7 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Footer */}
+        {/* 5. Switch to Registration */}
         <div className="text-center pt-2 border-t border-neutral-100">
           <p className="text-xs text-neutral-500 font-light">
             New to MAISON?{' '}
@@ -182,6 +202,7 @@ const Login = () => {
             </Link>
           </p>
         </div>
+
       </div>
     </div>
   );

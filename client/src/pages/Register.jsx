@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, ArrowRight, AlertCircle, Eye, EyeOff, ShieldCheck, Check } from 'lucide-react';
+import { Sparkles, ArrowRight, AlertCircle, Eye, EyeOff, Check, ShieldCheck } from 'lucide-react';
 
-const AESTHETICS_LIST = [
+/**
+ * Curated list of fashion archetypes for profile customization
+ */
+const FASHION_ARCHETYPES = [
   'Quiet Luxury',
   'Minimalist',
   'Casual Chic',
@@ -12,7 +15,12 @@ const AESTHETICS_LIST = [
   'Haute Couture'
 ];
 
+/**
+ * Register Page Component
+ * Collects client name, credentials, aesthetic archetypes, and body silhouettes.
+ */
 const Register = () => {
+  // --- Form State ---
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,33 +28,42 @@ const Register = () => {
   const [selectedAesthetics, setSelectedAesthetics] = useState(['Quiet Luxury', 'Minimalist']);
   const [bodyType, setBodyType] = useState('Hourglass');
   const [agreeTerms, setAgreeTerms] = useState(true);
+
+  // --- UI State ---
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // --- Auth & Navigation ---
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const toggleAesthetic = (item) => {
-    if (selectedAesthetics.includes(item)) {
-      setSelectedAesthetics(selectedAesthetics.filter((a) => a !== item));
-    } else {
-      setSelectedAesthetics([...selectedAesthetics, item]);
-    }
+  // --- Toggle Aesthetic Selection ---
+  const handleToggleAesthetic = (archetype) => {
+    setSelectedAesthetics((currentList) =>
+      currentList.includes(archetype)
+        ? currentList.filter((item) => item !== archetype)
+        : [...currentList, archetype]
+    );
   };
 
-  const isPasswordStrong = password.length >= 6;
-
+  // --- Submit Handler ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!agreeTerms) {
-      setError('Please accept the MAISON Atelier terms to create an account.');
+    // Validation Checks
+    if (!name.trim() || !email.trim() || !password) {
+      setError('Please fill in all required fields.');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+      setError('Password must contain at least 6 characters.');
+      return;
+    }
+
+    if (!agreeTerms) {
+      setError('Please agree to the MAISON Private Client terms to proceed.');
       return;
     }
 
@@ -54,15 +71,18 @@ const Register = () => {
 
     try {
       await register({
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim(),
         password,
         aesthetics: selectedAesthetics,
         bodyType,
       });
+
+      // Redirect new clients to 12-Season Color Analysis
       navigate('/color-analysis');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to establish account. Please try again.');
+      const message = err.response?.data?.message || 'Failed to establish account. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -71,8 +91,9 @@ const Register = () => {
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-16 bg-white text-black">
       <div className="max-w-lg w-full bg-white border border-neutral-300 p-8 sm:p-12 shadow-xl space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-3">
+        
+        {/* 1. Header Section */}
+        <div className="text-center space-y-2">
           <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-neutral-400">
             Client Enrollment
           </span>
@@ -80,11 +101,11 @@ const Register = () => {
             Join MAISON Atelier
           </h1>
           <p className="text-xs text-neutral-500 font-light leading-relaxed">
-            Create your profile to unlock custom 12-season color formulas, digital closet archives, and virtual fitting room privileges.
+            Create your client profile to unlock custom color palettes and digital closet archiving.
           </p>
         </div>
 
-        {/* Error Alert */}
+        {/* 2. Error Banner */}
         {error && (
           <div className="p-4 border border-red-300 bg-red-50 text-red-800 text-xs flex items-center gap-2.5 animate-fadeIn">
             <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
@@ -92,9 +113,13 @@ const Register = () => {
           </div>
         )}
 
-        {/* Form */}
+        {/* 3. Enrollment Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
+          
+          {/* Personal Info Fields */}
           <div className="space-y-4">
+            
+            {/* Full Name */}
             <div>
               <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700 mb-1.5">
                 Full Name
@@ -104,11 +129,12 @@ const Register = () => {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Eleanor Vance"
+                placeholder="Eleanor Vance"
                 className="w-full text-xs border border-neutral-300 p-3 text-black bg-white focus:border-black outline-none transition-colors"
               />
             </div>
 
+            {/* Email Address */}
             <div>
               <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700 mb-1.5">
                 Email Address
@@ -123,6 +149,7 @@ const Register = () => {
               />
             </div>
 
+            {/* Password with Visibility Toggle */}
             <div>
               <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700 mb-1.5">
                 Password
@@ -140,55 +167,58 @@ const Register = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-3 text-neutral-400 hover:text-black transition-colors"
+                  title={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+
+              {/* Password Rule Indicator */}
               {password && (
-                <p className={`text-[10px] mt-1.5 flex items-center gap-1 ${isPasswordStrong ? 'text-green-700' : 'text-neutral-400'}`}>
-                  {isPasswordStrong ? <Check className="w-3 h-3" /> : '•'} Minimum 6 characters met
+                <p className={`text-[10px] mt-1.5 flex items-center gap-1 ${password.length >= 6 ? 'text-green-700' : 'text-neutral-400'}`}>
+                  {password.length >= 6 ? <Check className="w-3 h-3" /> : '•'} Minimum 6 characters
                 </p>
               )}
             </div>
           </div>
 
-          {/* Aesthetic Preferences */}
-          <div className="border-t border-neutral-200 pt-4 space-y-3">
+          {/* Style Archetypes Selector */}
+          <div className="border-t border-neutral-200 pt-4 space-y-2.5">
             <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700">
-              Style Archetypes (Select all that apply)
+              Style Archetypes (Pick Your Preferred Styles)
             </label>
             <div className="flex flex-wrap gap-2">
-              {AESTHETICS_LIST.map((aes) => {
-                const selected = selectedAesthetics.includes(aes);
+              {FASHION_ARCHETYPES.map((archetype) => {
+                const isSelected = selectedAesthetics.includes(archetype);
                 return (
                   <button
-                    key={aes}
+                    key={archetype}
                     type="button"
-                    onClick={() => toggleAesthetic(aes)}
+                    onClick={() => handleToggleAesthetic(archetype)}
                     className={`px-3 py-1.5 text-xs transition-all ${
-                      selected
+                      isSelected
                         ? 'bg-black text-white'
                         : 'border border-neutral-300 text-neutral-600 hover:border-black hover:text-black bg-white'
                     }`}
                   >
-                    {aes}
+                    {archetype}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Body Silhouette */}
+          {/* Silhouette / Body Proportion */}
           <div className="space-y-1.5">
             <label className="block text-[11px] uppercase tracking-wider font-semibold text-neutral-700">
-              Silhouette Proportion
+              Body Silhouette Proportion
             </label>
             <select
               value={bodyType}
               onChange={(e) => setBodyType(e.target.value)}
               className="w-full text-xs border border-neutral-300 p-2.5 bg-white text-black focus:border-black outline-none"
             >
-              <option value="Hourglass">Hourglass Proportion</option>
+              <option value="Hourglass">Hourglass</option>
               <option value="Rectangle">Rectangle / Column</option>
               <option value="Pear">Inverted Triangle / Athletic</option>
               <option value="Petite">Petite & Tailored</option>
@@ -196,19 +226,21 @@ const Register = () => {
             </select>
           </div>
 
+          {/* Terms Agreement Checkbox */}
           <div className="flex items-center gap-2 pt-1">
             <input
               type="checkbox"
-              id="terms"
+              id="termsAgreement"
               checked={agreeTerms}
               onChange={(e) => setAgreeTerms(e.target.checked)}
-              className="accent-black w-3.5 h-3.5"
+              className="accent-black w-3.5 h-3.5 cursor-pointer"
             />
-            <label htmlFor="terms" className="text-[11px] text-neutral-500 cursor-pointer">
-              I agree to the MAISON Private Client Terms & AI Styling Protocols.
+            <label htmlFor="termsAgreement" className="text-[11px] text-neutral-500 cursor-pointer select-none">
+              I agree to the MAISON Private Client terms and AI styling policies.
             </label>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -217,27 +249,28 @@ const Register = () => {
             {loading ? (
               <>
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Establishing Profile...</span>
+                <span>Creating Profile...</span>
               </>
             ) : (
               <>
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Create Atelier Account</span>
+                <span>Establish Atelier Profile</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}
           </button>
         </form>
 
-        {/* Footer */}
+        {/* 4. Switch to Sign In */}
         <div className="text-center pt-2 border-t border-neutral-100">
           <p className="text-xs text-neutral-500 font-light">
-            Already have an account?{' '}
+            Already registered?{' '}
             <Link to="/login" className="font-semibold text-black hover:underline uppercase tracking-wider text-[11px]">
-              Sign In &rarr;
+              Sign In to Your Account &rarr;
             </Link>
           </p>
         </div>
+
       </div>
     </div>
   );
